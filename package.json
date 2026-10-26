@@ -1,0 +1,21 @@
+{
+  "name": "mobile-qa",
+  "version": "0.2.0",
+  "description": "Claude Code skill: Maestro E2E for Expo/React Native projects (iOS Simulator). Installing this package copies the skill bundle into .claude/skills/mobile-qa of the consuming project — it has no runtime API of its own.",
+  "private": true,
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MirMohsun/mobile-qa.git"
+  },
+  "files": [
+    "SKILL.md",
+    "rules",
+    "scripts",
+    "examples",
+    "postinstall.js"
+  ],
+  "scripts": {
+    "postinstall": "node postinstall.js"
+  }
+}

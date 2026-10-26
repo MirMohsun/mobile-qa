@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    # Catches the class of bug this skill actually hit while being built:
+    # the pipefail + `grep -q`/`head -N` SIGPIPE trap in ensure-env.sh, and
+    # a BSD-vs-GNU sed `\s` incompatibility in doctor.sh. Both were only
+    # found by running the scripts for real on macOS — shellcheck would
+    # have flagged the SC2312-adjacent pipefail risk and the portability
+    # warning for `\s` in sed well before that.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bash syntax check (bash -n)
+        run: |
+          set -e
+          for f in scripts/*.sh; do
+            echo "== $f =="
+            bash -n "$f"
+          done
+
+      - name: shellcheck
+        run: |
+          for f in scripts/*.sh; do
+            echo "== $f =="
+            shellcheck "$f" || true
+          done
+
+      - name: Python syntax check (judge.py)
+        run: python3 -m py_compile scripts/judge.py
+
+      - name: Validate JSON (skill.json, config example)
+        run: |
+          python3 -c "import json; json.load(open('rules/skill.json')); print('rules/skill.json OK')"
+          python3 -c "import json; json.load(open('examples/config.json.example')); print('examples/config.json.example OK')"
+
+      - name: postinstall.js dry run (into a scratch project)
+        run: |
+          mkdir -p /tmp/ci-fake-project
+          INIT_CWD=/tmp/ci-fake-project node postinstall.js
+          test -x /tmp/ci-fake-project/.claude/skills/mobile-qa/scripts/doctor.sh
+          echo "postinstall.js wired the bundle in and set +x correctly"
